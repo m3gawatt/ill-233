@@ -8,6 +8,15 @@ import {
 } from './jobs';
 import type { Job } from '../types/job';
 
+/**
+ * Creates a job fixture for pure helper tests.
+ *
+ * @param slug - The stable role identifier.
+ * @param postedDate - The role's ISO posting date.
+ * @param department - The department that owns the role.
+ * @param location - The location associated with the role.
+ * @returns A job fixture.
+ */
 function makeJob(
     slug: string,
     postedDate: string,

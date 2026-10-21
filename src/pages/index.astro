@@ -108,6 +108,7 @@ const visibleJobs = filterJobs(jobs);
   );
   const roleCards = document.querySelectorAll<HTMLElement>('[data-testid="role-card"]');
 
+  /** Updates visible role cards and filter controls from the selected criteria. */
   function updateVisibleRoles(): void {
     if (!departmentFilter || !locationFilter || !resetButton || !filteredEmptyState) {
       return;
@@ -132,6 +133,7 @@ const visibleJobs = filterJobs(jobs);
     resetButton.disabled = !department && !location;
   }
 
+  /** Clears both filter controls and restores the full role listing. */
   function resetFilters(): void {
     if (!departmentFilter || !locationFilter) {
       return;
