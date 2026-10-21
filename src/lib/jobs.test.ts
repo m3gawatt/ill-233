@@ -1,13 +1,33 @@
 import { describe, it, expect } from 'vitest';
-import { sortByNewest, formatPostedDate } from './jobs';
+import {
+    filterJobs,
+    formatPostedDate,
+    getDepartments,
+    getLocations,
+    sortByNewest,
+} from './jobs';
 import type { Job } from '../types/job';
 
-function makeJob(slug: string, postedDate: string): Job {
+/**
+ * Creates a job fixture for pure helper tests.
+ *
+ * @param slug - The stable role identifier.
+ * @param postedDate - The role's ISO posting date.
+ * @param department - The department that owns the role.
+ * @param location - The location associated with the role.
+ * @returns A job fixture.
+ */
+function makeJob(
+    slug: string,
+    postedDate: string,
+    department = 'Technology',
+    location = 'Remote',
+): Job {
     return {
         slug,
         title: `Role ${slug}`,
-        department: 'Technology',
-        location: 'Remote',
+        department,
+        location,
         type: 'Full-time',
         remote: true,
         postedDate,
@@ -30,6 +50,70 @@ describe('sortByNewest', () => {
         const original = jobs.map((j) => j.slug);
         sortByNewest(jobs);
         expect(jobs.map((j) => j.slug)).toEqual(original);
+    });
+});
+
+describe('filterJobs', () => {
+    const jobs = [
+        makeJob('frontend', '2027-03-15', 'Technology', 'Remote'),
+        makeJob('platform', '2027-03-10', 'Technology', 'Vancouver'),
+        makeJob('scientist', '2027-03-01', 'Research', 'Vancouver'),
+    ];
+
+    it('filters by department', () => {
+        expect(filterJobs(jobs, { department: 'Technology' }).map((job) => job.slug)).toEqual([
+            'frontend',
+            'platform',
+        ]);
+    });
+
+    it('filters by location', () => {
+        expect(filterJobs(jobs, { location: 'Vancouver' }).map((job) => job.slug)).toEqual([
+            'platform',
+            'scientist',
+        ]);
+    });
+
+    it('combines department and location filters with AND matching', () => {
+        expect(
+            filterJobs(jobs, { department: 'Technology', location: 'Vancouver' }).map(
+                (job) => job.slug,
+            ),
+        ).toEqual(['platform']);
+    });
+
+    it('returns every job when filters are cleared', () => {
+        expect(filterJobs(jobs, {}).map((job) => job.slug)).toEqual(
+            jobs.map((job) => job.slug),
+        );
+    });
+
+    it('returns an empty array when no roles match', () => {
+        expect(
+            filterJobs(jobs, { department: 'Research', location: 'Remote' }),
+        ).toEqual([]);
+    });
+
+    it('does not mutate the input array', () => {
+        const original = jobs.map((job) => job.slug);
+        filterJobs(jobs, { department: 'Technology' });
+        expect(jobs.map((job) => job.slug)).toEqual(original);
+    });
+});
+
+describe('filter option helpers', () => {
+    const jobs = [
+        makeJob('frontend', '2027-03-15', 'Technology', 'Remote'),
+        makeJob('platform', '2027-03-10', 'Technology', 'Vancouver'),
+        makeJob('scientist', '2027-03-01', 'Research', 'Vancouver'),
+    ];
+
+    it('returns unique alphabetized departments', () => {
+        expect(getDepartments(jobs)).toEqual(['Research', 'Technology']);
+    });
+
+    it('returns unique alphabetized locations', () => {
+        expect(getLocations(jobs)).toEqual(['Remote', 'Vancouver']);
     });
 });
 

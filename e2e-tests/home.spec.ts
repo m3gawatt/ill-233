@@ -18,6 +18,57 @@ test.describe('Open roles listing', () => {
         await expect(page.getByTestId('role-card')).toHaveCount(expectedRoleCount);
     });
 
+    test('filters roles by department and location', async ({ page }) => {
+        await page.goto('/');
+
+        await test.step('filter by department', async () => {
+            await page.getByTestId('department-filter').selectOption('Technology');
+            await expect(page.getByTestId('role-card').filter({ visible: true })).toHaveCount(2);
+            await expect(
+                page.getByTestId('role-card').filter({
+                    has: page.getByRole('heading', {
+                        name: 'Senior Frontend Engineer',
+                        exact: true,
+                    }),
+                }),
+            ).toBeVisible();
+        });
+
+        await test.step('combine department and location filters', async () => {
+            await page.getByTestId('department-filter').selectOption('Finance');
+            await page.getByTestId('location-filter').selectOption('Woodinville, WA, USA');
+            await expect(page.getByTestId('role-card').filter({ visible: true })).toHaveCount(1);
+            await expect(
+                page.getByRole('heading', { name: 'Financial Analyst', exact: true }),
+            ).toBeVisible();
+        });
+
+        await test.step('filter by location independently', async () => {
+            await page.getByTestId('department-filter').selectOption('');
+            await page.getByTestId('location-filter').selectOption('Woodinville, WA, USA');
+            await expect(page.getByTestId('role-card').filter({ visible: true })).toHaveCount(3);
+        });
+    });
+
+    test('resets filters and shows an empty result state', async ({ page }) => {
+        await page.goto('/');
+
+        await test.step('show no matching roles', async () => {
+            await page.getByTestId('department-filter').selectOption('Technology');
+            await page.getByTestId('location-filter').selectOption('Vancouver, Canada');
+            await expect(page.getByTestId('filtered-empty-state')).toBeVisible();
+            await expect(page.getByTestId('role-card').filter({ visible: true })).toHaveCount(0);
+        });
+
+        await test.step('reset to all roles', async () => {
+            await page.getByTestId('filter-reset').click();
+            await expect(page.getByTestId('filtered-empty-state')).toBeHidden();
+            await expect(page.getByTestId('role-card').filter({ visible: true })).toHaveCount(
+                expectedRoleCount,
+            );
+        });
+    });
+
     test('links through to a role detail page', async ({ page }) => {
         await page.goto('/');
         const firstCard = page.getByTestId('role-card').first();
