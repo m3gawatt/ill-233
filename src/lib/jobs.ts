@@ -7,10 +7,43 @@
  */
 import type { Job } from '../types/job';
 
+export interface JobFilters {
+    department?: string;
+    location?: string;
+}
+
 /** Return jobs sorted by posted date, newest first (does not mutate input). */
 export function sortByNewest(jobs: Job[]): Job[] {
     return [...jobs].sort(
         (a, b) => new Date(b.postedDate).getTime() - new Date(a.postedDate).getTime(),
+    );
+}
+
+/** Return jobs matching the selected department and location (does not mutate input). */
+export function filterJobs(jobs: Job[], filters: JobFilters = {}): Job[] {
+    return jobs.filter(
+        (job) =>
+            (!filters.department || job.department === filters.department) &&
+            (!filters.location || job.location === filters.location),
+    );
+}
+
+/** Return unique department values in alphabetical order. */
+export function getDepartments(jobs: Job[]): string[] {
+    return getUniqueSortedValues(jobs, (job) => job.department);
+}
+
+/** Return unique location values in alphabetical order. */
+export function getLocations(jobs: Job[]): string[] {
+    return getUniqueSortedValues(jobs, (job) => job.location);
+}
+
+function getUniqueSortedValues(
+    jobs: Job[],
+    getValue: (job: Job) => string,
+): string[] {
+    return [...new Set(jobs.map(getValue))].sort((first, second) =>
+        first.localeCompare(second),
     );
 }
 
